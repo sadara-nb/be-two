@@ -24,6 +24,7 @@ export class BikesService {
   // Should return all bikes from the database
   // Hint: look at how CarsService.findAll() does it
   async findAll() {
+    return this.bikesModel.find();
     // Your code here
   }
 
@@ -34,7 +35,16 @@ export class BikesService {
   // 3. If it does not exist, throw NotFoundException
   // 4. Return the found bike
   async findOne(id: string) {
-    // Your code here
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException(`Id is not a valid object id`);
+    }
+
+    const bike = await this.bikesModel.findById(id);
+
+    if (!bike) {
+      throw new NotFoundException('Bike with id ${id} not found');
+    }
+    return bike;
   }
 
   // TODO: Implement create
@@ -43,8 +53,16 @@ export class BikesService {
   // 3. Return the created bike
   // 4. In the catch, call this.handleException(error)
   async create(createBikeDto: CreateBikeDto) {
+    createBikeDto.marca = createBikeDto.marca.toLowerCase();
+
+    try {
+      const bike = await this.bikesModel.create(createBikeDto);
+      return bike;
+    } catch(error) {
+      this.handleException(error);
+      }
+    }
     // Your code here
-  }
 
   // TODO: Implement update
   // 1. If updateBikeDto.marca exists, normalize it to lowercase
@@ -54,6 +72,9 @@ export class BikesService {
   // 5. In the catch, call this.handleException(error)
   async update(id: string, updateBikeDto: UpdateBikeDto) {
     // Your code here
+    if (updateBikeDto.marca) {
+      updateBikeDto.marca = updateBikeDto.marca.toLocaleLowerCase();
+    }
   }
 
   // TODO: Implement remove
@@ -62,6 +83,13 @@ export class BikesService {
   // 3. If deletedCount === 0, throw BadRequestException
   // 4. Return with no value (return;)
   async remove(id: string) {
+    const { deletedCount } = await this.bikesModel.deleteOne({ _id: id });
+
+    if (deletedCount == 0) {
+      throw new BadRequestException('Bike with id ${id} not found');
+    }
+    
+    return;
     // Your code here
   }
 
